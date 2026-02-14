@@ -1,0 +1,8 @@
+{
+  "name": "Social Trackr",
+  "description": "A GenZ-themed consistency tracker for social media growth, featuring AI-powered 30-day content planning and progress tracking.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
