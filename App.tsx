@@ -24,14 +24,9 @@ const MONTH_NAMES = [
 
 const DAYS_IN_MONTH = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
 
-// --- UI Components ---
-
 const SmoothField = React.memo(({ label, value, onChange, placeholder, type = "text", name }: any) => {
   const [localValue, setLocalValue] = useState(value);
-
-  useEffect(() => {
-    setLocalValue(value);
-  }, [value]);
+  useEffect(() => { setLocalValue(value); }, [value]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setLocalValue(e.target.value);
@@ -75,8 +70,6 @@ const Card = ({ children, className = '', onClick }: any) => (
   </div>
 );
 
-// --- Main Application ---
-
 export default function App() {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [users, setUsers] = useState<UserProfile[]>([]);
@@ -85,7 +78,6 @@ export default function App() {
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
   const [loadingMessage, setLoadingMessage] = useState("Architecting your era...");
 
-  // Persistence
   useEffect(() => {
     const savedUsers = localStorage.getItem('social_trackr_v2_all_users');
     const savedUser = localStorage.getItem('social_trackr_v2_user');
@@ -111,7 +103,6 @@ export default function App() {
     localStorage.setItem('social_trackr_v2_all_users', JSON.stringify(users));
   }, [users]);
 
-  // Auth
   const handleGoogleAuth = () => {
     setLoading(true);
     setLoadingMessage("Connecting to Google...");
@@ -184,16 +175,10 @@ export default function App() {
         ExperienceLevel.BEGINNER, 
         onboardData.preferredFormats
       );
-      setUser({
-        ...user,
-        ...onboardData,
-        onboarded: true,
-        calendar: cal
-      });
+      setUser({ ...user, ...onboardData, onboarded: true, calendar: cal });
       setView('dashboard');
-    } catch (err) {
-      console.error(err);
-      alert("Error generating content. Check your API key in Netlify settings.");
+    } catch (err: any) {
+      alert(err.message || "Error generating content. Check your API key.");
     } finally {
       setLoading(false);
     }
@@ -208,8 +193,6 @@ export default function App() {
     if (completedCount % 10 === 0 && completedCount > 0) confetti({ particleCount: 150, spread: 80, origin: { y: 0.7 } });
     setUser({ ...user, calendar: newCal, currentStreak: completedCount });
   };
-
-  // --- Views ---
 
   const LandingPage = () => (
     <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-6 text-center relative overflow-hidden">
@@ -239,7 +222,7 @@ export default function App() {
           <h2 className="text-4xl font-black font-grotesk uppercase tracking-tight">{mode === 'login' ? 'Main Character' : 'Join Squad'}</h2>
           <p className="text-slate-500 font-bold uppercase tracking-widest text-[10px]">Access your growth engine</p>
         </div>
-        <Button variant="google" onClick={handleGoogleAuth} className="w-full py-5 border border-slate-200">
+        <Button variant="google" onClick={handleGoogleAuth} className="w-full py-5 border border-slate-200 text-slate-900">
            Continue with Google
         </Button>
         <form onSubmit={(e) => handleManualAuth(e, mode)} className="space-y-4">
@@ -255,7 +238,7 @@ export default function App() {
 
   const OnboardingView = () => {
     const [step, setStep] = useState(1);
-    const [data, setData] = useState({
+    const [onboardData, setOnboardData] = useState({
       platform: Platform.INSTAGRAM,
       niche: '',
       goal: Goal.FOLLOWERS,
@@ -263,7 +246,7 @@ export default function App() {
     });
 
     const toggleFormat = (f: ContentFormat) => {
-      setData(prev => ({
+      setOnboardData(prev => ({
         ...prev,
         preferredFormats: prev.preferredFormats.includes(f) 
           ? prev.preferredFormats.filter(item => item !== f)
@@ -285,15 +268,15 @@ export default function App() {
           </div>
 
           {step === 1 ? (
-            <div className="space-y-10 animate-in slide-in-from-right-8 duration-500">
+            <div className="space-y-10">
               <div className="space-y-6">
                 <label className="text-xs font-black text-slate-500 uppercase tracking-widest">Growth Platform</label>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   {PLATFORMS.map(p => (
                     <button
                       key={p}
-                      onClick={() => setData({ ...data, platform: p as Platform })}
-                      className={`p-5 rounded-2xl border-2 transition-all flex flex-col items-center gap-3 ${data.platform === p ? 'border-cyan-500 bg-cyan-500/10 text-cyan-400 shadow-[0_0_20px_rgba(6,182,212,0.2)]' : 'border-slate-800 hover:border-slate-700 text-slate-500'}`}
+                      onClick={() => setOnboardData({ ...onboardData, platform: p as Platform })}
+                      className={`p-5 rounded-2xl border-2 transition-all flex flex-col items-center gap-3 ${onboardData.platform === p ? 'border-cyan-500 bg-cyan-500/10 text-cyan-400' : 'border-slate-800 hover:border-slate-700 text-slate-500'}`}
                     >
                       <span className="text-xs font-black uppercase tracking-tight">{p}</span>
                     </button>
@@ -302,14 +285,14 @@ export default function App() {
               </div>
               <SmoothField 
                 label="What's your niche?" 
-                placeholder="e.g. AI SaaS, Fitness for Devs, minimalism" 
-                value={data.niche} 
-                onChange={(e: any) => setData({ ...data, niche: e.target.value })} 
+                placeholder="e.g. AI SaaS, Fitness for Devs" 
+                value={onboardData.niche} 
+                onChange={(e: any) => setOnboardData({ ...onboardData, niche: e.target.value })} 
               />
-              <Button onClick={() => setStep(2)} disabled={!data.niche} className="w-full py-6 text-xl">Continue <ChevronRight size={20} /></Button>
+              <Button onClick={() => setStep(2)} disabled={!onboardData.niche} className="w-full py-6 text-xl">Continue <ChevronRight size={20} /></Button>
             </div>
           ) : (
-            <div className="space-y-10 animate-in slide-in-from-right-8 duration-500">
+            <div className="space-y-10">
                <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                  <div className="space-y-6">
                    <label className="text-xs font-black text-slate-500 uppercase tracking-widest">Target Goal</label>
@@ -317,8 +300,8 @@ export default function App() {
                      {GOALS.map(g => (
                        <button
                          key={g}
-                         onClick={() => setData({ ...data, goal: g as Goal })}
-                         className={`w-full p-5 rounded-2xl border-2 text-left transition-all ${data.goal === g ? 'border-purple-500 bg-purple-500/10 text-purple-400' : 'border-slate-800 text-slate-500'}`}
+                         onClick={() => setOnboardData({ ...onboardData, goal: g as Goal })}
+                         className={`w-full p-5 rounded-2xl border-2 text-left transition-all ${onboardData.goal === g ? 'border-purple-500 bg-purple-500/10 text-purple-400' : 'border-slate-800 text-slate-500'}`}
                        >
                          <span className="text-sm font-black uppercase">{g}</span>
                        </button>
@@ -332,7 +315,7 @@ export default function App() {
                        <button
                          key={f}
                          onClick={() => toggleFormat(f)}
-                         className={`px-4 py-3 rounded-xl text-[10px] font-black uppercase border-2 transition-all ${data.preferredFormats.includes(f) ? 'border-pink-500 bg-pink-500/10 text-pink-400' : 'border-slate-800 text-slate-600'}`}
+                         className={`px-4 py-3 rounded-xl text-[10px] font-black uppercase border-2 transition-all ${onboardData.preferredFormats.includes(f) ? 'border-pink-500 bg-pink-500/10 text-pink-400' : 'border-slate-800 text-slate-600'}`}
                        >
                          {f}
                        </button>
@@ -342,7 +325,7 @@ export default function App() {
                </div>
                <div className="flex gap-6">
                  <Button variant="secondary" onClick={() => setStep(1)} className="flex-1 py-6">Back</Button>
-                 <Button onClick={() => startOnboarding(data)} className="flex-[2] py-6 text-xl">Cook Blueprint</Button>
+                 <Button onClick={() => startOnboarding(onboardData)} className="flex-[2] py-6 text-xl">Cook Blueprint</Button>
                </div>
             </div>
           )}
@@ -362,14 +345,14 @@ export default function App() {
       <div className="min-h-screen bg-slate-950 text-white lg:pl-72 flex flex-col font-grotesk">
         <aside className="fixed left-0 top-0 bottom-0 w-72 glass-card border-r border-slate-800 p-8 hidden lg:flex flex-col z-30">
           <div className="flex items-center gap-3 mb-12">
-            <div className="w-10 h-10 bg-gradient-to-br from-cyan-400 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg"><TrendingUp className="text-white" size={24} /></div>
+            <div className="w-10 h-10 bg-gradient-to-br from-cyan-400 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg"><TrendingUp size={24} /></div>
             <span className="text-2xl font-black uppercase tracking-tighter">TRACKR</span>
           </div>
           <nav className="flex-1 space-y-3">
             <button onClick={() => setView('dashboard')} className={`w-full flex items-center gap-4 px-5 py-4 rounded-2xl font-black uppercase text-xs transition-all ${view === 'dashboard' ? 'bg-slate-900 text-cyan-400 border border-slate-800' : 'text-slate-500 hover:text-white'}`}><LayoutDashboard size={20} /> Home</button>
             <button onClick={() => setView('settings')} className={`w-full flex items-center gap-4 px-5 py-4 rounded-2xl font-black uppercase text-xs transition-all ${view === 'settings' ? 'bg-slate-900 text-purple-400 border border-slate-800' : 'text-slate-500 hover:text-white'}`}><Settings size={20} /> Settings</button>
           </nav>
-          <div className="pt-8 border-t border-slate-900 space-y-6">
+          <div className="pt-8 border-t border-slate-900">
              <button onClick={() => { setUser(null); setView('landing'); }} className="w-full flex items-center gap-2 text-rose-500 text-[10px] font-black uppercase tracking-widest hover:bg-rose-500/10 p-4 rounded-xl transition-all"><LogOut size={16} /> Logout</button>
           </div>
         </aside>
@@ -377,9 +360,7 @@ export default function App() {
         <header className="p-8 border-b border-slate-900 bg-slate-950/50 sticky top-0 backdrop-blur-xl z-20 flex flex-col md:flex-row justify-between items-center gap-8">
            <div className="flex items-center gap-6 bg-slate-900 p-2 rounded-2xl border border-slate-800 shadow-xl">
              <button onClick={() => setSelectedMonth(prev => Math.max(0, prev - 1))} className="p-3 hover:bg-slate-800 rounded-xl transition-all disabled:opacity-20" disabled={selectedMonth === 0}><ChevronLeft size={20} /></button>
-             <div className="min-w-[160px] text-center">
-               <span className="text-lg font-black uppercase tracking-widest">{MONTH_NAMES[selectedMonth]} 2025</span>
-             </div>
+             <div className="min-w-[160px] text-center"><span className="text-lg font-black uppercase tracking-widest">{MONTH_NAMES[selectedMonth]} 2025</span></div>
              <button onClick={() => setSelectedMonth(prev => Math.min(11, prev + 1))} className="p-3 hover:bg-slate-800 rounded-xl transition-all disabled:opacity-20" disabled={selectedMonth === 11}><ChevronRight size={20} /></button>
            </div>
            <div className="text-right">
@@ -394,30 +375,16 @@ export default function App() {
         <main className="p-8 space-y-12 max-w-7xl mx-auto w-full">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             <Card className="md:col-span-2 border-cyan-500/20 bg-cyan-500/5">
-              <div className="flex justify-between mb-4">
-                <p className="text-[10px] font-black text-cyan-400 uppercase tracking-widest">Monthly Goal</p>
-                <span className="text-xs font-black">{progress}%</span>
-              </div>
-              <div className="flex items-end justify-between">
-                <span className="text-6xl font-black">{completedCount} / {DAYS_IN_MONTH[selectedMonth] || 30}</span>
-                <span className="text-sm font-bold text-slate-500 uppercase">Tracked</span>
-              </div>
-              <div className="mt-6 h-3 bg-slate-900 rounded-full overflow-hidden">
-                <div className="h-full bg-cyan-500 shadow-[0_0_20px_rgba(6,182,212,0.8)]" style={{ width: `${progress}%` }} />
-              </div>
+              <div className="flex justify-between mb-4"><p className="text-[10px] font-black text-cyan-400 uppercase tracking-widest">Monthly Goal</p><span>{progress}%</span></div>
+              <div className="flex items-end justify-between"><span className="text-6xl font-black">{completedCount} / {DAYS_IN_MONTH[selectedMonth] || 30}</span></div>
+              <div className="mt-6 h-3 bg-slate-900 rounded-full overflow-hidden"><div className="h-full bg-cyan-500" style={{ width: `${progress}%` }} /></div>
             </Card>
-            <Card className="border-purple-500/20 bg-purple-500/5 flex flex-col justify-between">
-              <p className="text-[10px] font-black text-purple-400 uppercase tracking-widest">Niche</p>
-              <p className="text-3xl font-black uppercase truncate">{user.niche}</p>
-            </Card>
-            <Card className="border-pink-500/20 bg-pink-500/5 flex flex-col justify-between">
-              <p className="text-[10px] font-black text-pink-400 uppercase tracking-widest">Target</p>
-              <p className="text-3xl font-black uppercase truncate">{user.goal}</p>
-            </Card>
+            <Card className="border-purple-500/20 bg-purple-500/5 flex flex-col justify-between"><p className="text-[10px] font-black text-purple-400 uppercase tracking-widest">Niche</p><p className="text-3xl font-black uppercase truncate">{user.niche}</p></Card>
+            <Card className="border-pink-500/20 bg-pink-500/5 flex flex-col justify-between"><p className="text-[10px] font-black text-pink-400 uppercase tracking-widest">Target</p><p className="text-3xl font-black uppercase truncate">{user.goal}</p></Card>
           </div>
 
           <section className="space-y-8">
-            <h2 className="text-4xl font-black uppercase tracking-tighter">Plan</h2>
+            <h2 className="text-4xl font-black uppercase tracking-tighter text-white">Calendar</h2>
             <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-4">
               {currentMonthData.map(d => (
                 <div key={d.day} onClick={() => toggleDay(d.day, d.month)} className={`aspect-square p-4 rounded-3xl border-2 transition-all cursor-pointer flex flex-col justify-between ${d.completed ? 'bg-cyan-500 border-cyan-400' : 'bg-slate-900 border-slate-800'}`}>
@@ -446,15 +413,15 @@ export default function App() {
               </div>
             </div>
             <div>
-              <h2 className="text-3xl font-black uppercase tracking-tight mb-8">Next Up</h2>
+              <h2 className="text-3xl font-black uppercase tracking-tight mb-8">Up Next</h2>
               {currentDay ? (
-                <Card className="border-4 border-cyan-500/30 p-10 space-y-6">
+                <Card className="border-4 border-cyan-500/30 p-10 space-y-6 bg-slate-900/40">
                    <p className="text-[10px] font-black text-slate-500 uppercase">Day {currentDay.day}</p>
                    <h3 className="text-3xl font-black uppercase text-cyan-400">{currentDay.hook}</h3>
                    <p className="text-slate-400 font-medium italic">"{currentDay.tip}"</p>
-                   <Button onClick={() => toggleDay(currentDay.day, currentDay.month)} className="w-full py-6 text-xl">FINISH POST</Button>
+                   <Button onClick={() => toggleDay(currentDay.day, currentDay.month)} className="w-full py-6 text-xl">MARK AS DONE</Button>
                 </Card>
-              ) : <p>All caught up!</p>}
+              ) : <p className="text-slate-500 uppercase font-black">All goals achieved! 🚀</p>}
             </div>
           </section>
         </main>
@@ -462,28 +429,26 @@ export default function App() {
     );
   };
 
-  const SettingsView = () => {
-    return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center lg:pl-72 p-6">
-        <Card className="w-full max-w-2xl p-12 text-center">
-          <h2 className="text-4xl font-black uppercase mb-8">Settings</h2>
-          <Button onClick={() => setView('dashboard')}>Back to Dashboard</Button>
-        </Card>
-      </div>
-    );
-  };
+  const SettingsView = () => (
+    <div className="min-h-screen bg-slate-950 flex items-center justify-center lg:pl-72 p-6">
+      <Card className="w-full max-w-2xl p-12 text-center border-2 border-slate-800">
+        <h2 className="text-4xl font-black uppercase mb-8">Settings</h2>
+        <Button onClick={() => setView('dashboard')}>Return Home</Button>
+      </Card>
+    </div>
+  );
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white">
+    <div className="min-h-screen bg-slate-950 text-white selection:bg-cyan-500/40">
       {view === 'landing' && <LandingPage />}
       {(view === 'login' || view === 'signup') && <AuthView mode={view} />}
       {view === 'onboarding' && <OnboardingView />}
       {view === 'dashboard' && <Dashboard />}
       {view === 'settings' && <SettingsView />}
       {loading && (
-        <div className="fixed inset-0 bg-slate-950 z-[100] flex flex-col items-center justify-center gap-8">
+        <div className="fixed inset-0 bg-slate-950/90 backdrop-blur-sm z-[100] flex flex-col items-center justify-center gap-8">
           <div className="w-24 h-24 border-4 border-slate-800 border-t-cyan-500 animate-spin rounded-full" />
-          <h2 className="text-2xl font-black uppercase">{loadingMessage}</h2>
+          <h2 className="text-2xl font-black uppercase tracking-widest">{loadingMessage}</h2>
         </div>
       )}
     </div>
