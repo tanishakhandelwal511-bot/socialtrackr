@@ -1,22 +1,24 @@
-import { GoogleGenAI, Type } from "@google/genai";
-import { Platform, Goal, ExperienceLevel, ContentDay } from './types.ts';
 
-// The API key is sourced from process.env.API_KEY
+import { GoogleGenAI, Type } from "@google/genai";
+import { Platform, Goal, ExperienceLevel, ContentDay, ContentFormat } from './types.ts';
+
 const genAI = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
-export async function generate30DayCalendar(
+export async function generateMonthCalendar(
+  month: number,
   platform: Platform,
   niche: string,
   goal: Goal,
-  level: ExperienceLevel
+  level: ExperienceLevel,
+  formats: ContentFormat[]
 ): Promise<ContentDay[]> {
   const model = 'gemini-3-flash-preview';
+  const monthName = new Intl.DateTimeFormat('en-US', { month: 'long' }).format(new Date(2025, month));
   
-  const prompt = `Generate a 30-day content calendar for a ${level} content creator on ${platform} focusing on the niche: "${niche}". 
-  The primary goal is ${goal}. 
-  Provide specific, actionable content ideas for each day.
-  Include catchy hooks, engaging captions, clear CTAs, 5 relevant hashtags, and a pro tip for growth.
-  The formats should be typical for ${platform}.`;
+  const prompt = `Generate a content calendar for the month of ${monthName} for a ${level} content creator on ${platform} in the niche: "${niche}". 
+  Primary goal: ${goal}. 
+  Only use these formats: ${formats.join(', ')}.
+  Provide 30 days of unique ideas. Return a JSON array of objects.`;
 
   const response = await genAI.models.generateContent({
     model,
@@ -38,7 +40,7 @@ export async function generate30DayCalendar(
               items: { type: Type.STRING }
             },
             tip: { type: Type.STRING },
-            script: { type: Type.STRING, description: "Optional script if format is video-based" }
+            script: { type: Type.STRING }
           },
           required: ["day", "format", "hook", "caption", "cta", "hashtags", "tip"]
         }
@@ -50,11 +52,12 @@ export async function generate30DayCalendar(
     const data = JSON.parse(response.text || "[]");
     return data.map((item: any) => ({
       ...item,
+      month,
       completed: false
     }));
   } catch (error) {
     console.error("Failed to parse calendar JSON", error);
-    throw new Error("Invalid response from AI");
+    throw new Error("AI output was malformed.");
   }
 }
 
@@ -66,9 +69,8 @@ export async function chatWithAI(
   
   const systemInstruction = `You are the Social Trackr Assistant. 
   You help users grow their presence on ${context.platform || 'social media'} in the ${context.niche || 'general'} niche.
-  Be energetic, encouraging, and use GenZ slang occasionally like 'W', 'rizz', 'main character', 'viral era'.
-  Keep responses concise and actionable.
-  Current Day Context: ${JSON.stringify(context.currentDayContent || {})}`;
+  Be energetic, encouraging, and use GenZ slang (rizz, no cap, main character).
+  Keep responses concise.`;
 
   const response = await genAI.models.generateContent({
     model,
@@ -79,44 +81,5 @@ export async function chatWithAI(
     }
   });
 
-  return response.text || "I'm having a small glitch in my matrix, bestie. Try again?";
-}
-
-export async function regenerateDay(
-  platform: Platform,
-  niche: string,
-  day: number,
-  existingContent: ContentDay
-): Promise<ContentDay> {
-  const model = 'gemini-3-flash-preview';
-  const prompt = `Regenerate the content for Day ${day} of a 30-day calendar for ${platform} in the niche ${niche}. 
-  The previous idea was: "${existingContent.hook}". Give me something fresh and more engaging.`;
-
-  const response = await genAI.models.generateContent({
-    model,
-    contents: prompt,
-    config: {
-      responseMimeType: "application/json",
-      responseSchema: {
-        type: Type.OBJECT,
-        properties: {
-          day: { type: Type.INTEGER },
-          format: { type: Type.STRING },
-          hook: { type: Type.STRING },
-          caption: { type: Type.STRING },
-          cta: { type: Type.STRING },
-          hashtags: { 
-            type: Type.ARRAY,
-            items: { type: Type.STRING }
-          },
-          tip: { type: Type.STRING },
-          script: { type: Type.STRING }
-        },
-        required: ["day", "format", "hook", "caption", "cta", "hashtags", "tip"]
-      }
-    }
-  });
-
-  const data = JSON.parse(response.text || "{}");
-  return { ...data, completed: false };
+  return response.text || "Glitch in the matrix, bestie. Try again?";
 }
