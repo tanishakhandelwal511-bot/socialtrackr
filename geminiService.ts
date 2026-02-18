@@ -1,17 +1,6 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { Platform, Goal, ExperienceLevel, ContentDay, ContentFormat } from './types';
 
-/**
- * Lazy-initializes the Gemini API client to prevent module-level crashes.
- */
-function getAI() {
-  const apiKey = process.env.API_KEY;
-  if (!apiKey || apiKey.trim() === '') {
-    throw new Error("API_KEY is missing. Please set it in your environment variables.");
-  }
-  return new GoogleGenAI({ apiKey });
-}
-
 export async function generateMonthCalendar(
   month: number,
   platform: Platform,
@@ -20,7 +9,7 @@ export async function generateMonthCalendar(
   level: ExperienceLevel,
   formats: ContentFormat[]
 ): Promise<ContentDay[]> {
-  const ai = getAI();
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
   const model = 'gemini-3-flash-preview';
   const monthName = new Intl.DateTimeFormat('en-US', { month: 'long' }).format(new Date(2025, month));
   
@@ -74,7 +63,7 @@ export async function chatWithAI(
   message: string, 
   context: { platform?: Platform; niche?: string; currentDayContent?: any }
 ): Promise<string> {
-  const ai = getAI();
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
   const model = 'gemini-3-flash-preview';
   
   const systemInstruction = `You are the Social Trackr Assistant. 
