@@ -1,4 +1,4 @@
-import { Platform, Goal, ExperienceLevel } from './types.ts';
+import { Platform, Goal, ExperienceLevel } from './types';
 
 export const ADMIN_EMAIL = 'admin@socialtrackr.com';
 export const ADMIN_PASSWORD = 'admin123';

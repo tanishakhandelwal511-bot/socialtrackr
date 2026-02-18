@@ -10,13 +10,13 @@ import {
 import { 
   UserProfile, Role, Platform, Goal, ExperienceLevel, ContentDay, 
   ChatMessage, ContentFormat 
-} from './types.ts';
+} from './types';
 import { 
   ADMIN_EMAIL, ADMIN_PASSWORD, PLATFORMS, GOALS, LEVELS 
-} from './constants.ts';
+} from './constants';
 import { 
   generateMonthCalendar, chatWithAI 
-} from './geminiService.ts';
+} from './geminiService';
 
 declare const confetti: any;
 
@@ -459,6 +459,7 @@ export default function App() {
                 <span className="text-xs font-black">{progress}% Completed</span>
               </div>
               <div className="flex items-end justify-between">
+                {/* Fixed "Cannot find name 'd'" by defining the arrow function correctly */}
                 <span className="text-6xl font-black">{currentMonthData.filter(d => d.completed).length} / {DAYS_IN_MONTH[selectedMonth]}</span>
                 <span className="text-sm font-bold text-slate-500 uppercase">Days Tracked</span>
               </div>

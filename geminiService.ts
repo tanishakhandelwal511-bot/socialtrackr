@@ -1,5 +1,5 @@
 import { GoogleGenAI, Type } from "@google/genai";
-import { Platform, Goal, ExperienceLevel, ContentDay, ContentFormat } from './types.ts';
+import { Platform, Goal, ExperienceLevel, ContentDay, ContentFormat } from './types';
 
 /**
  * Lazy-initializes the Gemini API client to prevent module-level crashes.
