@@ -1,8 +1,16 @@
-
 import { GoogleGenAI, Type } from "@google/genai";
 import { Platform, Goal, ExperienceLevel, ContentDay, ContentFormat } from './types.ts';
 
-const genAI = new GoogleGenAI({ apiKey: process.env.API_KEY });
+/**
+ * Lazy-initializes the Gemini API client to prevent module-level crashes.
+ */
+function getAI() {
+  const apiKey = process.env.API_KEY;
+  if (!apiKey || apiKey.trim() === '') {
+    throw new Error("API_KEY is missing. Please set it in your environment variables.");
+  }
+  return new GoogleGenAI({ apiKey });
+}
 
 export async function generateMonthCalendar(
   month: number,
@@ -12,6 +20,7 @@ export async function generateMonthCalendar(
   level: ExperienceLevel,
   formats: ContentFormat[]
 ): Promise<ContentDay[]> {
+  const ai = getAI();
   const model = 'gemini-3-flash-preview';
   const monthName = new Intl.DateTimeFormat('en-US', { month: 'long' }).format(new Date(2025, month));
   
@@ -20,7 +29,7 @@ export async function generateMonthCalendar(
   Only use these formats: ${formats.join(', ')}.
   Provide 30 days of unique ideas. Return a JSON array of objects.`;
 
-  const response = await genAI.models.generateContent({
+  const response = await ai.models.generateContent({
     model,
     contents: prompt,
     config: {
@@ -65,6 +74,7 @@ export async function chatWithAI(
   message: string, 
   context: { platform?: Platform; niche?: string; currentDayContent?: any }
 ): Promise<string> {
+  const ai = getAI();
   const model = 'gemini-3-flash-preview';
   
   const systemInstruction = `You are the Social Trackr Assistant. 
@@ -72,7 +82,7 @@ export async function chatWithAI(
   Be energetic, encouraging, and use GenZ slang (rizz, no cap, main character).
   Keep responses concise.`;
 
-  const response = await genAI.models.generateContent({
+  const response = await ai.models.generateContent({
     model,
     contents: message,
     config: {
