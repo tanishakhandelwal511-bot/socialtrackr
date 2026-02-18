@@ -195,7 +195,8 @@ export default function App() {
       });
       setView('dashboard');
     } catch (err) {
-      alert("Algorithm error. Please try again.");
+      console.error(err);
+      alert("Algorithm error. Make sure your API key is set correctly in Netlify Environment Variables.");
     } finally {
       setLoading(false);
     }
@@ -388,7 +389,10 @@ export default function App() {
   const Dashboard = () => {
     if (!user) return null;
     const currentMonthData = user.calendar.filter(d => d.month === selectedMonth);
-    const progress = Math.round((currentMonthData.filter(d => d.completed).length / (currentMonthData.length || 1)) * 100);
+    const completedDays = currentMonthData.filter(d => d.completed);
+    // Fix: Defined completedCount for use in both progress calculation and JSX display
+    const completedCount = completedDays.length;
+    const progress = Math.round((completedCount / (currentMonthData.length || 1)) * 100);
     const currentDay = currentMonthData.find(d => !d.completed);
 
     return (
@@ -459,8 +463,7 @@ export default function App() {
                 <span className="text-xs font-black">{progress}% Completed</span>
               </div>
               <div className="flex items-end justify-between">
-                {/* Fixed "Cannot find name 'd'" by defining the arrow function correctly */}
-                <span className="text-6xl font-black">{currentMonthData.filter(d => d.completed).length} / {DAYS_IN_MONTH[selectedMonth]}</span>
+                <span className="text-6xl font-black">{completedCount} / {DAYS_IN_MONTH[selectedMonth] || 30}</span>
                 <span className="text-sm font-bold text-slate-500 uppercase">Days Tracked</span>
               </div>
               <div className="mt-6 h-3 bg-slate-900 rounded-full overflow-hidden border border-slate-800">
@@ -535,7 +538,7 @@ export default function App() {
                <h2 className="text-3xl font-black uppercase tracking-tight">Daily Feed</h2>
                <div className="space-y-4 max-h-[800px] overflow-y-auto pr-4 custom-scroll">
                   {currentMonthData.length > 0 ? currentMonthData.map(d => (
-                    <Card key={d.day} className={`border-l-8 ${d.completed ? 'border-l-cyan-500 bg-cyan-500/5' : 'border-l-slate-800'}`}>
+                    <Card key={`${d.month}-${d.day}`} className={`border-l-8 ${d.completed ? 'border-l-cyan-500 bg-cyan-500/5' : 'border-l-slate-800'}`}>
                        <div className="flex items-start justify-between gap-6">
                          <div className="flex-1 space-y-4">
                            <div className="flex items-center gap-3">
@@ -632,63 +635,4 @@ export default function App() {
     };
 
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center lg:pl-72 p-6 font-grotesk">
-        <Card className="w-full max-w-2xl space-y-12 border-2 border-slate-800 p-12 shadow-2xl">
-          <div className="flex items-center gap-6">
-            <div className="p-4 bg-purple-500/10 rounded-2xl text-purple-400 border border-purple-500/20"><Settings size={32} /></div>
-            <div>
-              <h2 className="text-4xl font-black uppercase tracking-tighter leading-none">Settings</h2>
-              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-2">Personalize your content engine</p>
-            </div>
-          </div>
-          <div className="space-y-10">
-             <div className="space-y-6">
-               <label className="text-xs font-black text-slate-500 uppercase tracking-widest">Growth Platform</label>
-               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                 {PLATFORMS.map(p => (
-                   <button key={p} onClick={() => setEditData({...editData, platform: p as Platform})} className={`p-4 rounded-xl border-2 text-[10px] font-black uppercase transition-all ${editData.platform === p ? 'border-cyan-500 bg-cyan-500/10 text-cyan-400 shadow-lg' : 'border-slate-900 text-slate-600 hover:border-slate-800'}`}>{p}</button>
-                 ))}
-               </div>
-             </div>
-             <SmoothField label="Niche / Industry" value={editData.niche} onChange={(e: any) => setEditData({...editData, niche: e.target.value})} />
-             <div className="space-y-6">
-               <label className="text-xs font-black text-slate-500 uppercase tracking-widest">Strategy Focus</label>
-               <div className="space-y-3">
-                 {GOALS.map(g => (
-                   <button key={g} onClick={() => setEditData({...editData, goal: g as Goal})} className={`w-full p-4 rounded-xl border-2 text-left text-xs font-black uppercase transition-all ${editData.goal === g ? 'border-purple-500 bg-purple-500/10 text-purple-400' : 'border-slate-900 text-slate-600 hover:border-slate-800'}`}>{g}</button>
-                 ))}
-               </div>
-             </div>
-             <div className="flex gap-6 pt-6">
-               <Button variant="secondary" onClick={() => setView('dashboard')} className="flex-1 py-5">Cancel</Button>
-               <Button onClick={saveSettings} className="flex-[2] py-5 text-lg">Save Changes</Button>
-             </div>
-          </div>
-        </Card>
-      </div>
-    );
-  };
-
-  return (
-    <div className="min-h-screen bg-slate-950 text-white selection:bg-cyan-500/40 selection:text-white">
-      {view === 'landing' && <LandingPage />}
-      {(view === 'login' || view === 'signup') && <AuthView mode={view} />}
-      {view === 'onboarding' && <OnboardingView />}
-      {view === 'dashboard' && <Dashboard />}
-      {view === 'settings' && <SettingsView />}
-
-      {loading && (
-        <div className="fixed inset-0 bg-slate-950/98 backdrop-blur-3xl z-[100] flex flex-col items-center justify-center gap-12 p-10 text-center animate-in fade-in duration-500">
-          <div className="relative">
-            <div className="w-48 h-48 border-8 border-slate-900 rounded-full border-t-cyan-500 border-r-purple-600 animate-spin" />
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"><TrendingUp className="text-white animate-bounce" size={56} /></div>
-          </div>
-          <div className="space-y-4">
-            <h2 className="text-5xl font-black uppercase tracking-tighter font-grotesk">{loadingMessage}</h2>
-            <p className="text-slate-600 font-black uppercase tracking-[0.6em] text-[10px] animate-pulse">Running algorithmic simulations...</p>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
+      <div className="min-h-screen bg-slate
